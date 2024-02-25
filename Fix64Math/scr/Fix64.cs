@@ -1,12 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 
-namespace LookStep.VGLookStep.Math
+namespace Fix64Math
 {
     public partial struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
     {
-        readonly long m_rawValue;
+        private readonly long m_rawValue;
 
         // Precision of this type is 2^-32, that is 2,3283064365386962890625E-10
         public static readonly decimal Precision = (decimal)(new Fix64(1L));//0.00000000023283064365386962890625m;
@@ -25,25 +24,22 @@ namespace LookStep.VGLookStep.Math
         public static readonly Fix64 PiTimes2 = new Fix64(PI_TIMES_2);
         public static readonly Fix64 PiInv = (Fix64)0.3183098861837906715377675267M;
         public static readonly Fix64 PiOver2Inv = (Fix64)0.6366197723675813430755350535M;
-        static readonly Fix64 Log2Max = new Fix64(LOG2MAX);
-        static readonly Fix64 Log2Min = new Fix64(LOG2MIN);
-        static readonly Fix64 Ln2 = new Fix64(LN2);
-
-        static readonly Fix64 LutInterval = (Fix64)(LUT_SIZE - 1) / PiOver2;
-        const long MAX_VALUE = long.MaxValue;
-        const long MIN_VALUE = long.MinValue;
-        const int NUM_BITS = 64;
-
-        const int FRACTIONAL_PLACES = 32;
-        const long ONE = 1L << FRACTIONAL_PLACES;
-
-        const long PI_TIMES_2 = 0x6487ED511;
-        const long PI = 0x3243F6A88;
-        const long PI_OVER_2 = 0x1921FB544;
-        const long LN2 = 0xB17217F7;
-        const long LOG2MAX = 0x1F00000000;
-        const long LOG2MIN = -0x2000000000;
-        const int LUT_SIZE = (int)(PI_OVER_2 >> 15);
+        private static readonly Fix64 Log2Max = new Fix64(LOG2MAX);
+        private static readonly Fix64 Log2Min = new Fix64(LOG2MIN);
+        private static readonly Fix64 Ln2 = new Fix64(LN2);
+        private static readonly Fix64 LutInterval = (Fix64)(LUT_SIZE - 1) / PiOver2;
+        private const long MAX_VALUE = long.MaxValue;
+        private const long MIN_VALUE = long.MinValue;
+        private const int NUM_BITS = 64;
+        private const int FRACTIONAL_PLACES = 32;
+        private const long ONE = 1L << FRACTIONAL_PLACES;
+        private const long PI_TIMES_2 = 0x6487ED511;
+        private const long PI = 0x3243F6A88;
+        private const long PI_OVER_2 = 0x1921FB544;
+        private const long LN2 = 0xB17217F7;
+        private const long LOG2MAX = 0x1F00000000;
+        private const long LOG2MIN = -0x2000000000;
+        private const int LUT_SIZE = (int)(PI_OVER_2 >> 15);
 
         public long GetRaw()
         {
@@ -84,7 +80,7 @@ namespace LookStep.VGLookStep.Math
             }
 
             // branchless implementation, see http://www.strchr.com/optimized_abs_function
-            var mask = value.m_rawValue >> 63;
+            long mask = value.m_rawValue >> 63;
             return new Fix64((value.m_rawValue + mask) ^ mask);
         }
 
@@ -95,7 +91,7 @@ namespace LookStep.VGLookStep.Math
         public static Fix64 FastAbs(Fix64 value)
         {
             // branchless implementation, see http://www.strchr.com/optimized_abs_function
-            var mask = value.m_rawValue >> 63;
+            long mask = value.m_rawValue >> 63;
             return new Fix64((value.m_rawValue + mask) ^ mask);
         }
 
@@ -114,7 +110,7 @@ namespace LookStep.VGLookStep.Math
         /// </summary>
         public static Fix64 Ceiling(Fix64 value)
         {
-            var hasFractionalPart = (value.m_rawValue & 0x00000000FFFFFFFF) != 0;
+            bool hasFractionalPart = (value.m_rawValue & 0x00000000FFFFFFFF) != 0;
             return hasFractionalPart ? Floor(value) + One : value;
         }
 
@@ -124,8 +120,8 @@ namespace LookStep.VGLookStep.Math
         /// </summary>
         public static Fix64 Round(Fix64 value)
         {
-            var fractionalPart = value.m_rawValue & 0x00000000FFFFFFFF;
-            var integralPart = Floor(value);
+            long fractionalPart = value.m_rawValue & 0x00000000FFFFFFFF;
+            Fix64 integralPart = Floor(value);
             if (fractionalPart < 0x80000000)
             {
                 return integralPart;
@@ -163,9 +159,9 @@ namespace LookStep.VGLookStep.Math
         /// </summary>
         public static Fix64 operator +(Fix64 x, Fix64 y)
         {
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
-            var sum = xl + yl;
+            long xl = x.m_rawValue;
+            long yl = y.m_rawValue;
+            long sum = xl + yl;
             // if signs of operands are equal and signs of sum and x are different
             if (((~(xl ^ yl) & (xl ^ sum)) & MIN_VALUE) != 0)
             {
@@ -188,9 +184,9 @@ namespace LookStep.VGLookStep.Math
         /// </summary>
         public static Fix64 operator -(Fix64 x, Fix64 y)
         {
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
-            var diff = xl - yl;
+            long xl = x.m_rawValue;
+            long yl = y.m_rawValue;
+            long diff = xl - yl;
             // if signs of operands are different and signs of sum and x are different
             if ((((xl ^ yl) & (xl ^ diff)) & MIN_VALUE) != 0)
             {
@@ -207,9 +203,9 @@ namespace LookStep.VGLookStep.Math
             return new Fix64(x.m_rawValue - y.m_rawValue);
         }
 
-        static long AddOverflowHelper(long x, long y, ref bool overflow)
+        private static long AddOverflowHelper(long x, long y, ref bool overflow)
         {
-            var sum = x + y;
+            long sum = x + y;
             // x + y overflows if sign(x) ^ sign(y) != sign(sum)
             overflow |= ((x ^ y ^ sum) & MIN_VALUE) != 0;
             return sum;
@@ -218,26 +214,26 @@ namespace LookStep.VGLookStep.Math
         public static Fix64 operator *(Fix64 x, Fix64 y)
         {
 
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            long xl = x.m_rawValue;
+            long yl = y.m_rawValue;
 
-            var xlo = (ulong)(xl & 0x00000000FFFFFFFF);
-            var xhi = xl >> FRACTIONAL_PLACES;
-            var ylo = (ulong)(yl & 0x00000000FFFFFFFF);
-            var yhi = yl >> FRACTIONAL_PLACES;
+            ulong xlo = (ulong)(xl & 0x00000000FFFFFFFF);
+            long xhi = xl >> FRACTIONAL_PLACES;
+            ulong ylo = (ulong)(yl & 0x00000000FFFFFFFF);
+            long yhi = yl >> FRACTIONAL_PLACES;
 
-            var lolo = xlo * ylo;
-            var lohi = (long)xlo * yhi;
-            var hilo = xhi * (long)ylo;
-            var hihi = xhi * yhi;
+            ulong lolo = xlo * ylo;
+            long lohi = (long)xlo * yhi;
+            long hilo = xhi * (long)ylo;
+            long hihi = xhi * yhi;
 
-            var loResult = lolo >> FRACTIONAL_PLACES;
-            var midResult1 = lohi;
-            var midResult2 = hilo;
-            var hiResult = hihi << FRACTIONAL_PLACES;
+            ulong loResult = lolo >> FRACTIONAL_PLACES;
+            long midResult1 = lohi;
+            long midResult2 = hilo;
+            long hiResult = hihi << FRACTIONAL_PLACES;
 
             bool overflow = false;
-            var sum = AddOverflowHelper((long)loResult, midResult1, ref overflow);
+            long sum = AddOverflowHelper((long)loResult, midResult1, ref overflow);
             sum = AddOverflowHelper(sum, midResult2, ref overflow);
             sum = AddOverflowHelper(sum, hiResult, ref overflow);
 
@@ -263,7 +259,7 @@ namespace LookStep.VGLookStep.Math
 
             // if the top 32 bits of hihi (unused in the result) are neither all 0s or 1s,
             // then this means the result overflowed.
-            var topCarry = hihi >> FRACTIONAL_PLACES;
+            long topCarry = hihi >> FRACTIONAL_PLACES;
             if (topCarry != 0 && topCarry != -1 /*&& xl != -17 && yl != -17*/)
             {
                 return opSignsEqual ? MaxValue : MinValue;
@@ -300,30 +296,29 @@ namespace LookStep.VGLookStep.Math
         public static Fix64 FastMul(Fix64 x, Fix64 y)
         {
 
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            long xl = x.m_rawValue;
+            long yl = y.m_rawValue;
 
-            var xlo = (ulong)(xl & 0x00000000FFFFFFFF);
-            var xhi = xl >> FRACTIONAL_PLACES;
-            var ylo = (ulong)(yl & 0x00000000FFFFFFFF);
-            var yhi = yl >> FRACTIONAL_PLACES;
+            ulong xlo = (ulong)(xl & 0x00000000FFFFFFFF);
+            long xhi = xl >> FRACTIONAL_PLACES;
+            ulong ylo = (ulong)(yl & 0x00000000FFFFFFFF);
+            long yhi = yl >> FRACTIONAL_PLACES;
 
-            var lolo = xlo * ylo;
-            var lohi = (long)xlo * yhi;
-            var hilo = xhi * (long)ylo;
-            var hihi = xhi * yhi;
+            ulong lolo = xlo * ylo;
+            long lohi = (long)xlo * yhi;
+            long hilo = xhi * (long)ylo;
+            long hihi = xhi * yhi;
 
-            var loResult = lolo >> FRACTIONAL_PLACES;
-            var midResult1 = lohi;
-            var midResult2 = hilo;
-            var hiResult = hihi << FRACTIONAL_PLACES;
+            ulong loResult = lolo >> FRACTIONAL_PLACES;
+            long midResult1 = lohi;
+            long midResult2 = hilo;
+            long hiResult = hihi << FRACTIONAL_PLACES;
 
-            var sum = (long)loResult + midResult1 + midResult2 + hiResult;
+            long sum = (long)loResult + midResult1 + midResult2 + hiResult;
             return new Fix64(sum);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static int CountLeadingZeroes(ulong x)
+        private static int CountLeadingZeroes(ulong x)
         {
             int result = 0;
             while ((x & 0xF000000000000000) == 0) { result += 4; x <<= 4; }
@@ -333,8 +328,8 @@ namespace LookStep.VGLookStep.Math
 
         public static Fix64 operator /(Fix64 x, Fix64 y)
         {
-            var xl = x.m_rawValue;
-            var yl = y.m_rawValue;
+            long xl = x.m_rawValue;
+            long yl = y.m_rawValue;
 
             if (yl == 0)
             {
@@ -342,10 +337,10 @@ namespace LookStep.VGLookStep.Math
                 throw new DivideByZeroException();
             }
 
-            var remainder = (ulong)(xl >= 0 ? xl : -xl);
-            var divider = (ulong)(yl >= 0 ? yl : -yl);
-            var quotient = 0UL;
-            var bitPos = NUM_BITS / 2 + 1;
+            ulong remainder = (ulong)(xl >= 0 ? xl : -xl);
+            ulong divider = (ulong)(yl >= 0 ? yl : -yl);
+            ulong quotient = 0UL;
+            int bitPos = NUM_BITS / 2 + 1;
 
 
             // If the divider is divisible by 2^n, take advantage of it.
@@ -365,7 +360,7 @@ namespace LookStep.VGLookStep.Math
                 remainder <<= shift;
                 bitPos -= shift;
 
-                var div = remainder / divider;
+                ulong div = remainder / divider;
                 remainder = remainder % divider;
                 quotient += div << bitPos;
 
@@ -381,7 +376,7 @@ namespace LookStep.VGLookStep.Math
 
             // rounding
             ++quotient;
-            var result = (long)(quotient >> 1);
+            long result = (long)(quotient >> 1);
             if (((xl ^ yl) & MIN_VALUE) != 0)
             {
                 result = -result;
@@ -486,8 +481,8 @@ namespace LookStep.VGLookStep.Math
             // Take fractional part of exponent
             x = new Fix64(x.m_rawValue & 0x00000000FFFFFFFF);
 
-            var result = One;
-            var term = One;
+            Fix64 result = One;
+            Fix64 term = One;
             int i = 1;
             while (term.m_rawValue != 0)
             {
@@ -539,7 +534,7 @@ namespace LookStep.VGLookStep.Math
                 y += ONE;
             }
 
-            var z = new Fix64(rawX);
+            Fix64 z = new Fix64(rawX);
 
             for (int i = 0; i < FRACTIONAL_PLACES; i++)
             {
@@ -608,7 +603,7 @@ namespace LookStep.VGLookStep.Math
         /// </exception>
         public static Fix64 Sqrt(Fix64 x)
         {
-            var xl = x.m_rawValue;
+            long xl = x.m_rawValue;
             if (xl < 0)
             {
                 // We cannot represent infinities like Single and Double, and Sqrt is
@@ -616,11 +611,11 @@ namespace LookStep.VGLookStep.Math
                 throw new ArgumentOutOfRangeException("Negative value passed to Sqrt", "x");
             }
 
-            var num = (ulong)xl;
-            var result = 0UL;
+            ulong num = (ulong)xl;
+            ulong result = 0UL;
 
             // second-to-top bit
-            var bit = 1UL << (NUM_BITS - 2);
+            ulong bit = 1UL << (NUM_BITS - 2);
 
             while (bit > num)
             {
@@ -629,7 +624,7 @@ namespace LookStep.VGLookStep.Math
 
             // The main part is executed twice, in order to avoid
             // using 128 bit values in computations.
-            for (var i = 0; i < 2; ++i)
+            for (int i = 0; i < 2; ++i)
             {
                 // First we get the top 48 bits of the answer.
                 while (bit != 0)
@@ -685,25 +680,25 @@ namespace LookStep.VGLookStep.Math
         public static Fix64 Sin(Fix64 x)
         {
             bool flipHorizontal, flipVertical;
-            var clampedL = ClampSinValue(x.m_rawValue, out flipHorizontal, out flipVertical);
-            var clamped = new Fix64(clampedL);
+            long clampedL = ClampSinValue(x.m_rawValue, out flipHorizontal, out flipVertical);
+            Fix64 clamped = new Fix64(clampedL);
 
             // Find the two closest values in the LUT and perform linear interpolation
             // This is what kills the performance of this function on x86 - x64 is fine though
-            var rawIndex = FastMul(clamped, LutInterval);
-            var roundedIndex = Round(rawIndex);
-            var indexError = FastSub(rawIndex, roundedIndex);
+            Fix64 rawIndex = FastMul(clamped, LutInterval);
+            Fix64 roundedIndex = Round(rawIndex);
+            Fix64 indexError = FastSub(rawIndex, roundedIndex);
 
-            var nearestValue = new Fix64(SinLut[flipHorizontal ?
+            Fix64 nearestValue = new Fix64(SinLut[flipHorizontal ?
                 SinLut.Length - 1 - (int)roundedIndex :
                 (int)roundedIndex]);
-            var secondNearestValue = new Fix64(SinLut[flipHorizontal ?
+            Fix64 secondNearestValue = new Fix64(SinLut[flipHorizontal ?
                 SinLut.Length - 1 - (int)roundedIndex - Sign(indexError) :
                 (int)roundedIndex + Sign(indexError)]);
 
-            var delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue))).m_rawValue;
-            var interpolatedValue = nearestValue.m_rawValue + (flipHorizontal ? -delta : delta);
-            var finalValue = flipVertical ? -interpolatedValue : interpolatedValue;
+            long delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue))).m_rawValue;
+            long interpolatedValue = nearestValue.m_rawValue + (flipHorizontal ? -delta : delta);
+            long finalValue = flipVertical ? -interpolatedValue : interpolatedValue;
             return new Fix64(finalValue);
         }
 
@@ -715,25 +710,24 @@ namespace LookStep.VGLookStep.Math
         public static Fix64 FastSin(Fix64 x)
         {
             bool flipHorizontal, flipVertical;
-            var clampedL = ClampSinValue(x.m_rawValue, out flipHorizontal, out flipVertical);
+            long clampedL = ClampSinValue(x.m_rawValue, out flipHorizontal, out flipVertical);
 
             // Here we use the fact that the SinLut table has a number of entries
             // equal to (PI_OVER_2 >> 15) to use the angle to index directly into it
-            var rawIndex = (uint)(clampedL >> 15);
+            uint rawIndex = (uint)(clampedL >> 15);
             if (rawIndex >= LUT_SIZE)
             {
                 rawIndex = LUT_SIZE - 1;
             }
-            var nearestValue = SinLut[flipHorizontal ?
+            long nearestValue = SinLut[flipHorizontal ?
                 SinLut.Length - 1 - (int)rawIndex :
                 (int)rawIndex];
             return new Fix64(flipVertical ? -nearestValue : nearestValue);
         }
 
-
-        static long ClampSinValue(long angle, out bool flipHorizontal, out bool flipVertical)
+        private static long ClampSinValue(long angle, out bool flipHorizontal, out bool flipVertical)
         {
-            var largePI = 7244019458077122842;
+            long largePI = 7244019458077122842;
             // Obtained from ((Fix64)1686629713.065252369824872831112M).m_rawValue
             // This is (2^29)*PI, where 29 is the largest N such that (2^N)*PI < MaxValue.
             // The idea is that this number contains way more precision than PI_TIMES_2,
@@ -741,7 +735,7 @@ namespace LookStep.VGLookStep.Math
             // In practice this gives us an error of about 1,25e-9 in the worst case scenario (Sin(MaxValue))
             // Whereas simply doing x % PI_TIMES_2 is the 2e-3 range.
 
-            var clamped2Pi = angle;
+            long clamped2Pi = angle;
             for (int i = 0; i < 29; ++i)
             {
                 clamped2Pi %= (largePI >> i);
@@ -755,14 +749,14 @@ namespace LookStep.VGLookStep.Math
             // vertical or horizontal mirroring
             flipVertical = clamped2Pi >= PI;
             // obtain (angle % PI) from (angle % 2PI) - much faster than doing another modulo
-            var clampedPi = clamped2Pi;
+            long clampedPi = clamped2Pi;
             while (clampedPi >= PI)
             {
                 clampedPi -= PI;
             }
             flipHorizontal = clampedPi >= PI_OVER_2;
             // obtain (angle % PI_OVER_2) from (angle % PI) - much faster than doing another modulo
-            var clampedPiOver2 = clampedPi;
+            long clampedPiOver2 = clampedPi;
             if (clampedPiOver2 >= PI_OVER_2)
             {
                 clampedPiOver2 -= PI_OVER_2;
@@ -776,8 +770,8 @@ namespace LookStep.VGLookStep.Math
         /// </summary>
         public static Fix64 Cos(Fix64 x)
         {
-            var xl = x.m_rawValue;
-            var rawAngle = xl + (xl > 0 ? -PI - PI_OVER_2 : PI_OVER_2);
+            long xl = x.m_rawValue;
+            long rawAngle = xl + (xl > 0 ? -PI - PI_OVER_2 : PI_OVER_2);
             return Sin(new Fix64(rawAngle));
         }
 
@@ -787,8 +781,8 @@ namespace LookStep.VGLookStep.Math
         /// </summary>
         public static Fix64 FastCos(Fix64 x)
         {
-            var xl = x.m_rawValue;
-            var rawAngle = xl + (xl > 0 ? -PI - PI_OVER_2 : PI_OVER_2);
+            long xl = x.m_rawValue;
+            long rawAngle = xl + (xl > 0 ? -PI - PI_OVER_2 : PI_OVER_2);
             return FastSin(new Fix64(rawAngle));
         }
 
@@ -800,8 +794,8 @@ namespace LookStep.VGLookStep.Math
         /// </remarks>
         public static Fix64 Tan(Fix64 x)
         {
-            var clampedPi = x.m_rawValue % PI;
-            var flip = false;
+            long clampedPi = x.m_rawValue % PI;
+            bool flip = false;
             if (clampedPi < 0)
             {
                 clampedPi = -clampedPi;
@@ -813,19 +807,19 @@ namespace LookStep.VGLookStep.Math
                 clampedPi = PI_OVER_2 - (clampedPi - PI_OVER_2);
             }
 
-            var clamped = new Fix64(clampedPi);
+            Fix64 clamped = new Fix64(clampedPi);
 
             // Find the two closest values in the LUT and perform linear interpolation
-            var rawIndex = FastMul(clamped, LutInterval);
-            var roundedIndex = Round(rawIndex);
-            var indexError = FastSub(rawIndex, roundedIndex);
+            Fix64 rawIndex = FastMul(clamped, LutInterval);
+            Fix64 roundedIndex = Round(rawIndex);
+            Fix64 indexError = FastSub(rawIndex, roundedIndex);
 
-            var nearestValue = new Fix64(TanLut[(int)roundedIndex]);
-            var secondNearestValue = new Fix64(TanLut[(int)roundedIndex + Sign(indexError)]);
+            Fix64 nearestValue = new Fix64(TanLut[(int)roundedIndex]);
+            Fix64 secondNearestValue = new Fix64(TanLut[(int)roundedIndex + Sign(indexError)]);
 
-            var delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue))).m_rawValue;
-            var interpolatedValue = nearestValue.m_rawValue + delta;
-            var finalValue = flip ? -interpolatedValue : interpolatedValue;
+            long delta = FastMul(indexError, FastAbs(FastSub(nearestValue, secondNearestValue))).m_rawValue;
+            long interpolatedValue = nearestValue.m_rawValue + delta;
+            long finalValue = flip ? -interpolatedValue : interpolatedValue;
             return new Fix64(finalValue);
         }
 
@@ -842,7 +836,7 @@ namespace LookStep.VGLookStep.Math
 
             if (x.m_rawValue == 0 || x.m_rawValue == ONE) return PiOver2;
 
-            var result = Atan(Sqrt(One - x * x) / x);
+            Fix64 result = Atan(Sqrt(One - x * x) / x);
             return x.m_rawValue < 0 ? result + Pi : result;
         }
 
@@ -856,30 +850,30 @@ namespace LookStep.VGLookStep.Math
 
             // Force positive values for argument
             // Atan(-z) = -Atan(z).
-            var neg = z.m_rawValue < 0;
+            bool neg = z.m_rawValue < 0;
             if (neg)
             {
                 z = -z;
             }
 
             Fix64 result;
-            var two = (Fix64)2;
-            var three = (Fix64)3;
+            Fix64 two = (Fix64)2;
+            Fix64 three = (Fix64)3;
 
             bool invert = z > One;
             if (invert) z = One / z;
 
             result = One;
-            var term = One;
+            Fix64 term = One;
 
-            var zSq = z * z;
-            var zSq2 = zSq * two;
-            var zSqPlusOne = zSq + One;
-            var zSq12 = zSqPlusOne * two;
-            var dividend = zSq2;
-            var divisor = zSqPlusOne * three;
+            Fix64 zSq = z * z;
+            Fix64 zSq2 = zSq * two;
+            Fix64 zSqPlusOne = zSq + One;
+            Fix64 zSq12 = zSqPlusOne * two;
+            Fix64 dividend = zSq2;
+            Fix64 divisor = zSqPlusOne * three;
 
-            for (var i = 2; i < 30; ++i)
+            for (int i = 2; i < 30; ++i)
             {
                 term *= dividend / divisor;
                 result += term;
@@ -906,8 +900,8 @@ namespace LookStep.VGLookStep.Math
 
         public static Fix64 Atan2(Fix64 y, Fix64 x)
         {
-            var yl = y.m_rawValue;
-            var xl = x.m_rawValue;
+            long yl = y.m_rawValue;
+            long xl = x.m_rawValue;
             if (xl == 0)
             {
                 if (yl > 0)
@@ -921,7 +915,7 @@ namespace LookStep.VGLookStep.Math
                 return -PiOver2;
             }
             Fix64 atan;
-            var z = y / x;
+            Fix64 z = y / x;
 
             // Deal with overflow
             if (One + (Fix64)0.28M * z * z == MaxValue)
@@ -1023,7 +1017,7 @@ namespace LookStep.VGLookStep.Math
 
         internal static void GenerateSinLut()
         {
-            using (var writer = new StreamWriter("Fix64SinLut.cs"))
+            using (StreamWriter writer = new StreamWriter("Fix64SinLut.cs"))
             {
                 writer.Write(
 @"namespace FixMath.NET 
@@ -1035,14 +1029,14 @@ namespace LookStep.VGLookStep.Math
                 int lineCounter = 0;
                 for (int i = 0; i < LUT_SIZE; ++i)
                 {
-                    var angle = i * System.Math.PI * 0.5 / (LUT_SIZE - 1);
+                    double angle = i * System.Math.PI * 0.5 / (LUT_SIZE - 1);
                     if (lineCounter++ % 8 == 0)
                     {
                         writer.WriteLine();
                         writer.Write("            ");
                     }
-                    var sin = System.Math.Sin(angle);
-                    var rawValue = ((Fix64)sin).m_rawValue;
+                    double sin = System.Math.Sin(angle);
+                    long rawValue = ((Fix64)sin).m_rawValue;
                     writer.Write(string.Format("0x{0:X}L, ", rawValue));
                 }
                 writer.Write(
@@ -1055,7 +1049,7 @@ namespace LookStep.VGLookStep.Math
 
         internal static void GenerateTanLut()
         {
-            using (var writer = new StreamWriter("Fix64TanLut.cs"))
+            using (StreamWriter writer = new StreamWriter("Fix64TanLut.cs"))
             {
                 writer.Write(
 @"namespace MGF.Math 
@@ -1067,18 +1061,18 @@ namespace LookStep.VGLookStep.Math
                 int lineCounter = 0;
                 for (int i = 0; i < LUT_SIZE; ++i)
                 {
-                    var angle = i * System.Math.PI * 0.5 / (LUT_SIZE - 1);
+                    double angle = i * System.Math.PI * 0.5 / (LUT_SIZE - 1);
                     if (lineCounter++ % 8 == 0)
                     {
                         writer.WriteLine();
                         writer.Write("            ");
                     }
-                    var tan = System.Math.Tan(angle);
+                    double tan = System.Math.Tan(angle);
                     if (tan > (double)MaxValue || tan < 0.0)
                     {
                         tan = (double)MaxValue;
                     }
-                    var rawValue = (((decimal)tan > (decimal)MaxValue || tan < 0.0) ? MaxValue : (Fix64)tan).m_rawValue;
+                    long rawValue = (((decimal)tan > (decimal)MaxValue || tan < 0.0) ? MaxValue : (Fix64)tan).m_rawValue;
                     writer.Write(string.Format("0x{0:X}L, ", rawValue));
                 }
                 writer.Write(
@@ -1105,7 +1099,7 @@ namespace LookStep.VGLookStep.Math
         /// This is the constructor from raw value; it can only be used interally.
         /// </summary>
         /// <param name="rawValue"></param>
-        Fix64(long rawValue)
+        private Fix64(long rawValue)
         {
             m_rawValue = rawValue;
         }

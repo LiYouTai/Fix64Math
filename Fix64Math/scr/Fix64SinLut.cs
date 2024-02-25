@@ -1,6 +1,6 @@
-﻿namespace LookStep.VGLookStep.Math
+﻿namespace Fix64Math
 {
-    partial struct Fix64
+    public partial struct Fix64
     {
         public static readonly long[] SinLut = new[]
         {

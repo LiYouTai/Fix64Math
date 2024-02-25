@@ -1,15 +1,11 @@
-﻿using UnityEngine;
-namespace LookStep.VGLookStep.Math
+﻿namespace Fix64Math
 {
     public struct Fix64Vector2
     {
-
         public static Fix64Vector2 Up = new Fix64Vector2(0, 1);
         public static Fix64Vector2 Zero = new Fix64Vector2(0, 0);
-
         public Fix64 X;
         public Fix64 Y;
-
         public static Fix64Vector2 operator /(Fix64Vector2 a, Fix64 cs)
         {
             return new Fix64Vector2(a.X / cs, a.Y / cs);
@@ -19,7 +15,6 @@ namespace LookStep.VGLookStep.Math
         {
             return new Fix64Vector2(a.X * cs, a.Y * cs);
         }
-
 
         public static Fix64Vector2 operator *(Fix64Vector2 a, int cs)
         {
@@ -45,6 +40,7 @@ namespace LookStep.VGLookStep.Math
         {
             return x.X == y.X && x.Y == y.Y;
         }
+
         public static bool operator !=(Fix64Vector2 x, Fix64Vector2 y)
         {
             return x.X != y.X || x.Y != y.Y;
@@ -67,11 +63,6 @@ namespace LookStep.VGLookStep.Math
             Y = y;
         }
 
-        public Fix64Vector2(Vector2 v)
-        {
-            X = new Fix64(v.x);
-            Y = new Fix64(v.y);
-        }
         public Fix64 Magnitude()
         {
             return Fix64.Sqrt((X * X) + (Y * Y));
@@ -80,21 +71,6 @@ namespace LookStep.VGLookStep.Math
         public Fix64Vector2 Nomalize()
         {
             return this / this.Magnitude();
-        }
-
-        public Vector2 ToVector2()
-        {
-            return new Vector2((float)X, (float)Y);
-        }
-
-        public Vector3 ToVector3()
-        {
-            return new Vector3((float)X, (float)Y, 0);
-        }
-
-        public Vector3 ToVector3Zero()
-        {
-            return new Vector3((float)X, (float)Y, 0);
         }
 
         public static Fix64Vector2 Lerp(Fix64Vector2 a, Fix64Vector2 b, Fix64 t)
@@ -139,7 +115,5 @@ namespace LookStep.VGLookStep.Math
         {
             return "X:" + X.ToString() + "Y:" + Y.ToString();
         }
-
-
     }
 }

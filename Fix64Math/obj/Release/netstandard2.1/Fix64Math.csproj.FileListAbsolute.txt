@@ -1,0 +1,10 @@
+D:\Git\GitHubFix64Math\Fix64Math\bin\Release\netstandard2.1\Fix64Math.deps.json
+D:\Git\GitHubFix64Math\Fix64Math\bin\Release\netstandard2.1\Fix64Math.dll
+D:\Git\GitHubFix64Math\Fix64Math\bin\Release\netstandard2.1\Fix64Math.pdb
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.GeneratedMSBuildEditorConfig.editorconfig
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.AssemblyInfoInputs.cache
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.AssemblyInfo.cs
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.csproj.CoreCompileInputs.cache
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.sourcelink.json
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.dll
+D:\Git\GitHubFix64Math\Fix64Math\obj\Release\netstandard2.1\Fix64Math.pdb

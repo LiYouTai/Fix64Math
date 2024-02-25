@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-namespace LookStep.VGLookStep.Math
+﻿namespace Fix64Math
 {
     public struct Fix64Vector3
     {
@@ -37,7 +36,6 @@ namespace LookStep.VGLookStep.Math
         {
             return new Fix64Vector3(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
         }
-
 
         public static Fix64Vector3 operator -(Fix64Vector3 a, Fix64Vector3 cs)
         {
@@ -82,12 +80,6 @@ namespace LookStep.VGLookStep.Math
             Y = y;
             Z = z;
         }
-        public Fix64Vector3(Vector3 v)
-        {
-            X = new Fix64(v.x);
-            Y = new Fix64(v.y);
-            Z = new Fix64(v.z);
-        }
 
         public Fix64 Magnitude()
         {
@@ -97,16 +89,6 @@ namespace LookStep.VGLookStep.Math
         public Fix64Vector3 Nomalize()
         {
             return this / this.Magnitude();
-        }
-
-        public Vector2 ToVector2()
-        {
-            return new Vector2((float)X, (float)Y);
-        }
-
-        public Vector3 ToVector3()
-        {
-            return new Vector3((float)X, (float)Y, (float)Z);
         }
 
         public Fix64Vector2 ToFix64Vector2()
