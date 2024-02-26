@@ -1,0 +1,13 @@
+{
+  "name": "fix64math",
+  "displayName": "Fix64Math",
+  "version": "0.0.1",
+  "unity": "2018.4",
+  "description":"",
+  "license": "MIT",
+  "keywords": [
+
+  ],
+  "category": "GUI",
+  "relatedPackages": {}
+}
