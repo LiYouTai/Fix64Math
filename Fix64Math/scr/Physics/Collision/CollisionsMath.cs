@@ -1,4 +1,8 @@
-﻿namespace Fix64Math.Physics
+﻿using System.Collections.Generic;
+using System.Numerics;
+using System;
+
+namespace Fix64Math.Physics
 {
     internal class CollisionsMath
     {
@@ -56,14 +60,14 @@
         //    }
         //    return false;
         //}
-        private static bool CheckCollisionSize(IFSCollisionBase a, IFSCollisionBase b)
-        {
-            Fix64Vector3 posA = a.Position + a.Center;
-            Fix64Vector3 posB = b.Position + b.Center;
-            return Fix64.Abs(posA.X - posB.X) < a.HalfSize.X + b.HalfSize.X &&
-                 Fix64.Abs(posA.Y - posB.Y) < a.HalfSize.Y + b.HalfSize.Y &&
-                 Fix64.Abs(posA.Z - posB.Z) < a.HalfSize.Z + b.HalfSize.Z;
-        }
+        //private static bool CheckCollisionSize(IFSCollisionBase a, IFSCollisionBase b)
+        //{
+        //    Fix64Vector3 posA = a.Position + a.Center;
+        //    Fix64Vector3 posB = b.Position + b.Center;
+        //    return Fix64.Abs(posA.X - posB.X) < a.HalfSize.X + b.HalfSize.X &&
+        //         Fix64.Abs(posA.Y - posB.Y) < a.HalfSize.Y + b.HalfSize.Y &&
+        //         Fix64.Abs(posA.Z - posB.Z) < a.HalfSize.Z + b.HalfSize.Z;
+        //}
         //public static bool RayCast3D(FS3DRay ray, Fix64CollisionBase Collision, out FS3DRaycastHit hit)
         //{
         //    hit = new FS3DRaycastHit();
@@ -193,5 +197,24 @@
         //    hit.point = ray.origin + ray.direction * hit.distance;
         //    return true;
         //}
+        //检测两个碰撞盒
+        public static bool CheckCollisionSize(IFSCollisionBase a, IFSCollisionBase b)
+        {
+            //就是各轴 互相是否包含，（A 包含 B）||  （B 包含 A）
+            return ((b.MinVertex.X >= a.MinVertex.X && b.MinVertex.X <= a.MaxVertex.X) || (a.MinVertex.X >= b.MinVertex.X && a.MinVertex.X <= b.MaxVertex.X)) &&
+                   ((b.MinVertex.Y >= a.MinVertex.Y && b.MinVertex.Y <= a.MaxVertex.Y) || (a.MinVertex.Y >= b.MinVertex.Y && a.MinVertex.Y <= b.MaxVertex.Y)) &&
+                   ((b.MinVertex.Z >= a.MinVertex.Z && b.MinVertex.Z <= a.MaxVertex.Z) || (a.MinVertex.Z >= b.MinVertex.Z && a.MinVertex.Z <= b.MaxVertex.Z));
+        }
+        //检测包含点
+        public bool ContainPoint(IFSCollisionBase a, Fix64Vector3 point)
+        {
+            if (point.X < a.MinVertex.X) return false;
+            if (point.Y < a.MinVertex.Y) return false;
+            if (point.Z < a.MinVertex.Z) return false;
+            if (point.X > a.MaxVertex.X) return false;
+            if (point.Y > a.MaxVertex.Y) return false;
+            if (point.Z > a.MaxVertex.Z) return false;
+            return true;
+        }
     }
 }
